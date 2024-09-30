@@ -49,24 +49,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Deploy PostgreSQL database
-        run: |
-          docker stop myapp-db || true
-          docker rm myapp-db || true
-          docker run -d --name myapp-db \
-            --env-file .env \
-            -v postgres_data:/var/lib/postgresql/data \
-            --network etoapp \
-            postgres:16-alpine
-
-      - name: Wait for PostgreSQL to be ready
-        run: |
-          until docker exec myapp-db pg_isready --username=${POSTGRES_USER}; do
-            echo "Waiting for PostgreSQL to be ready..."
-            sleep 5
-          done
+        uses: actions/checkout@v3e
 
       - name: Deploy backend Docker container
         run: |
