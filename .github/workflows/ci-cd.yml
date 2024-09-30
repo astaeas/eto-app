@@ -28,12 +28,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
 
-      - name: Build and push Docker image
+      # Сборка и публикация Docker образа для бэкенда
+      - name: Build and push backend Docker image
         run: |
-          docker build -t astaeas/myapp:${{ github.sha }} .
-          docker tag astaeas/myapp:${{ github.sha }} docker.io/astaeas/myapp:latest
-          docker push docker.io/astaeas/myapp:${{ github.sha }}
-          docker push docker.io/astaeas/myapp:latest
+          docker build -t astaeas/myapp-backend:${{ github.sha }} -f backend/Dockerfile ./backend
+          docker tag astaeas/myapp-backend:${{ github.sha }} docker.io/astaeas/myapp-backend:latest
+          docker push docker.io/astaeas/myapp-backend:${{ github.sha }}
+          docker push docker.io/astaeas/myapp-backend:latest
+
+      # Сборка и публикация Docker образа для фронтенда
+      - name: Build and push frontend Docker image
+        run: |
+          docker build -t astaeas/myapp-frontend:${{ github.sha }} -f frontend/Dockerfile ./frontend
+          docker tag astaeas/myapp-frontend:${{ github.sha }} docker.io/astaeas/myapp-frontend:latest
+          docker push docker.io/astaeas/myapp-frontend:${{ github.sha }}
+          docker push docker.io/astaeas/myapp-frontend:latest
 
   deploy:
     needs: build
@@ -41,6 +50,26 @@ jobs:
     if: github.ref == 'refs/heads/main'
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Copy SSH Key
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H 192.168.56.2 >> ~/.ssh/known_hosts
+
       - name: Deploy to server
         run: |
-          ssh danila.192.168.56.2 "docker pull astaeas/myapp:latest && docker stop myapp && docker rm myapp && docker run -d --name myapp -p 80:80 astaeas/myapp:latest"
+          ssh danila@192.168.56.2 "docker pull astaeas/myapp-backend:latest && \
+          docker pull astaeas/myapp-frontend:latest && \
+          docker stop myapp-backend || true && \
+          docker rm myapp-backend || true && \
+          docker run -d --name myapp-backend -p 5000:5000 astaeas/myapp-backend:latest && \
+          docker stop myapp-frontend || true && \
+          docker rm myapp-frontend || true && \
+          docker run -d --name myapp-frontend -p 3000:3000 astaeas/myapp-frontend:latest"
+
