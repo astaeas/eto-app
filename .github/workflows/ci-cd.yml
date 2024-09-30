@@ -45,35 +45,28 @@ jobs:
           docker push docker.io/astaeas/myapp-frontend:${{ github.sha }}
           docker push docker.io/astaeas/myapp-frontend:latest
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+  name: Deploy to Self-Hosted Server
 
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Copy SSH Key
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        run: |
-          set -x  # Включить отладочный вывод
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ls -l ~/.ssh  # Показать содержимое директории .ssh
-          ssh-keyscan -H 192.168.56.2 >> ~/.ssh/known_hosts || echo "ssh-keyscan failed"
-
+        uses: actions/checkout@v2
 
       - name: Deploy to server
         run: |
-          ssh danila@192.168.56.2 "docker pull astaeas/myapp-backend:latest && \
-          docker pull astaeas/myapp-frontend:latest && \
-          docker stop myapp-backend || true && \
-          docker rm myapp-backend || true && \
-          docker run -d --name myapp-backend -p 5000:5000 astaeas/myapp-backend:latest && \
-          docker stop myapp-frontend || true && \
-          docker rm myapp-frontend || true && \
-          docker run -d --name myapp-frontend -p 3000:3000 astaeas/myapp-frontend:latest"
+          docker pull astaeas/myapp-backend:latest
+          docker pull astaeas/myapp-frontend:latest
+          docker stop myapp-backend || true
+          docker rm myapp-backend || true
+          docker run -d --name myapp-backend -p 5000:5000 astaeas/myapp-backend:latest
+          docker stop myapp-frontend || true
+          docker rm myapp-frontend || true
+          docker run -d --name myapp-frontend -p 3000:3000 astaeas/myapp-frontend:latest
 
