@@ -49,7 +49,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3e
+        uses: actions/checkout@v3
 
       - name: Deploy backend Docker container
         run: |
