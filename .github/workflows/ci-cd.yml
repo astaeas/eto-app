@@ -51,13 +51,46 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Deploy to server
+        deploy:
+    runs-on: self-hosted
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy PostgreSQL database
+        run: |
+          docker stop myapp-db || true
+          docker rm myapp-db || true
+          docker run -d --name myapp-db \
+            --env-file .env \
+            -v postgres_data:/var/lib/postgresql/data \
+            --network etoapp \
+            postgres:16-alpine
+
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          until docker exec myapp-db pg_isready --username=${POSTGRES_USER}; do
+            echo "Waiting for PostgreSQL to be ready..."
+            sleep 5
+          done
+
+      - name: Deploy backend Docker container
         run: |
           docker pull astaeas/myapp-backend:latest
-          docker pull astaeas/myapp-frontend:latest
           docker stop myapp-backend || true
           docker rm myapp-backend || true
-          docker run -d --name myapp-backend -p 8000:8000 astaeas/myapp-backend:latest
+          docker run -d --name myapp-backend \
+            --network etoapp \
+            -p 8000:8000 astaeas/myapp-backend:latest
+
+      - name: Deploy frontend Docker container
+        run: |
+          docker pull astaeas/myapp-frontend:latest
           docker stop myapp-frontend || true
           docker rm myapp-frontend || true
-          docker run -d --name myapp-frontend -p 3000:3000 astaeas/myapp-frontend:latest
+          docker run -d --name myapp-frontend \
+            -p 8080:80 \
+            --network etoapp \
+            astaeas/myapp-frontend:latest
