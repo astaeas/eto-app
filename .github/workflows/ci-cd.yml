@@ -60,21 +60,4 @@ jobs:
           docker run -d --name myapp-backend -p 8000:8000 astaeas/myapp-backend:latest
           docker stop myapp-frontend || true
           docker rm myapp-frontend || true
-          docker run -d --name myapp-frontend -p 8080:80 astaeas/myapp-frontend:latestdeploy:
-    runs-on: self-hosted
-    needs: build
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Deploy to server
-        run: |
-          docker pull astaeas/myapp-backend:latest
-          docker pull astaeas/myapp-frontend:latest
-          docker stop myapp-backend || true
-          docker rm myapp-backend || true
-          docker run -d --name myapp-backend -p 8000:8000 astaeas/myapp-backend:latest
-          docker stop myapp-frontend || true
-          docker rm myapp-frontend || true
           docker run -d --name myapp-frontend -p 8080:80 astaeas/myapp-frontend:latest
