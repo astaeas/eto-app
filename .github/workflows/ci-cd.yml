@@ -30,10 +30,10 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build -t <astaeas>/myapp:${{ github.sha }} .
-          docker tag <astaeas>/myapp:${{ github.sha }} docker.io/<your-dockerhub-username>/myapp:latest
-          docker push docker.io/<astaeas>/myapp:${{ github.sha }}
-          docker push docker.io/<astaeas>/myapp:latest
+          docker build -t astaeas/myapp:${{ github.sha }} .
+          docker tag astaeas/myapp:${{ github.sha }} docker.io/astaeas/myapp:latest
+          docker push docker.io/astaeas/myapp:${{ github.sha }}
+          docker push docker.io/astaeas/myapp:latest
 
   deploy:
     needs: build
@@ -43,4 +43,4 @@ jobs:
     steps:
       - name: Deploy to server
         run: |
-          ssh danila.192.168.56.2 "docker pull <astaeas>/myapp:latest && docker stop myapp && docker rm myapp && docker run -d --name myapp -p 80:80 <astaeas>/myapp:latest"
+          ssh danila.192.168.56.2 "docker pull astaeas/myapp:latest && docker stop myapp && docker rm myapp && docker run -d --name myapp -p 80:80 astaeas/myapp:latest"
