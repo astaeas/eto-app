@@ -15,7 +15,7 @@ jobs:
     steps:
       # Проверка кода и установка зависимостей
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u astaeas --password-stdin
       - name: Set up Docker Buildx
@@ -52,16 +52,19 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Copy SSH Key
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
+          set -x  # Включить отладочный вывод
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H 192.168.56.2 >> ~/.ssh/known_hosts
+          ls -l ~/.ssh  # Показать содержимое директории .ssh
+          ssh-keyscan -H 192.168.56.2 >> ~/.ssh/known_hosts || echo "ssh-keyscan failed"
+
 
       - name: Deploy to server
         run: |
