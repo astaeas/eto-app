@@ -28,7 +28,6 @@ jobs:
           key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-
-
       # Сборка и публикация Docker образа для бэкенда
       - name: Build and push backend Docker image
         run: |
@@ -36,7 +35,6 @@ jobs:
           docker tag astaeas/myapp-backend:${{ github.sha }} docker.io/astaeas/myapp-backend:latest
           docker push docker.io/astaeas/myapp-backend:${{ github.sha }}
           docker push docker.io/astaeas/myapp-backend:latest
-
       # Сборка и публикация Docker образа для фронтенда
       - name: Build and push frontend Docker image
         run: |
@@ -45,16 +43,9 @@ jobs:
           docker push docker.io/astaeas/myapp-frontend:${{ github.sha }}
           docker push docker.io/astaeas/myapp-frontend:latest
 
-  name: Deploy to Self-Hosted Server
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
   deploy:
     runs-on: self-hosted
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -68,5 +59,4 @@ jobs:
           docker run -d --name myapp-backend -p 5000:5000 astaeas/myapp-backend:latest
           docker stop myapp-frontend || true
           docker rm myapp-frontend || true
-          docker run -d --name myapp-frontend -p 3000:3000 astaeas/myapp-frontend:latest
-
+          docker run -d --name myapp-frontend -p 3000:3000 astaeas/myapp-frontend:latest 
